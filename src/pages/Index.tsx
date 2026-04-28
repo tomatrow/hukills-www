@@ -4,6 +4,7 @@ import { Phone, MessageSquare, ArrowRight } from "lucide-react"
 import Layout from "@/components/Layout"
 import Seo from "@/components/Seo"
 import ServiceImageGrid from "@/components/ServiceImageGrid"
+import PaymentCalculator from "@/components/PaymentCalculator"
 import { featuredServices } from "@/data/services"
 import { useLocationContext } from "@/context/location-context"
 import homeData from "@/cms/home-page.json"
@@ -93,6 +94,31 @@ const Index = () => {
 					</motion.div>
 
 					<ServiceImageGrid services={featuredServices} />
+				</div>
+			</section>
+
+			{/* Financing */}
+			<section className="py-20 md:py-28 bg-muted">
+				<div className="container">
+					<motion.div
+						{...fadeUp}
+						transition={{ duration: 0.5 }}
+						viewport={{ once: true }}
+						whileInView="animate"
+						initial="initial"
+						className="text-center mb-10"
+					>
+						<h2 className="text-3xl md:text-5xl font-display uppercase tracking-tight text-foreground">
+							Financing <span className="text-primary">Available</span>
+						</h2>
+						<p className="mt-4 text-muted-foreground max-w-xl mx-auto">
+							Estimate monthly payments for your project. Apply in minutes with no impact to your
+							credit score.
+						</p>
+					</motion.div>
+					<div className="max-w-3xl mx-auto">
+						<PaymentCalculator />
+					</div>
 				</div>
 			</section>
 
