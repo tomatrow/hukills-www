@@ -1,211 +1,193 @@
 # AGENTS.md
 
-Vite + React 18 + TS SPA (shadcn/ui, Tailwind) for Hukill's Plumbing, Drain Cleaning, Restoration, Leak Detection, Renovation, Water Mitigation, Mold Remediation and Remodels company. Marketing
-site only — no backend, no env vars required.
+pnpm-workspace monorepo for Hukill's Plumbing, Drain Cleaning, Restoration, Leak
+Detection, Renovation, Water Mitigation, Mold Remediation and Remodels company.
 
-## Commands (pnpm only; pinned via mise.toml)
+The site is a **SvelteKit 2 + Svelte 5** app deployed to **Vercel**; transactional
+email is sent via the **Resend REST API** from SvelteKit server code.
 
-- `pnpm dev` — Vite dev server on **:8080** (host `::`); HMR overlay disabled. **`/api/*` is NOT served by `pnpm dev`** — use `pnpm worker:dev` for that (see Worker section below).
-- `pnpm build` / `pnpm build:dev` — static-site build via `vite-react-ssg build`; outputs per-route nested HTML into `dist/`. Also runs `scripts/copy-404.mjs` to copy `dist/404/index.html` → `dist/404.html` (required by Cloudflare's `404-page` handler — see Deploy section below).
-- `pnpm preview` — Vite preview of the built `dist/` output.
-- `pnpm check` — type-check all three project references: `tsconfig.app.json` (`src/` + `admin/`), `tsconfig.node.json` (`vite.config.ts`), and `worker/tsconfig.json` (`worker/`). `vite-react-ssg build` also does an implicit type check on `src/`, but this is the dedicated standalone command.
-- `pnpm worker:dev` — `wrangler dev`; serves the Worker + static assets locally. **Requires a fresh `dist/` first — run `pnpm build` before this.** Only needed when testing `/api/*` routes; pure SPA work can use `pnpm dev` as before.
-- `pnpm worker:types` — regenerate `worker-configuration.d.ts` from `wrangler.jsonc` bindings. Re-run after any binding change; commit the output file.
-- `pnpm format` — Prettier across the repo (tabs, no semis, `printWidth: 100`, `experimentalTernaries`; ignores `node_modules/`, `pnpm-lock.yaml`, `dist/`). Run before committing.
-- `pnpm lint` — ESLint flat config (`eslint.config.js`).
-- `pnpm test` — Vitest run once; `pnpm test:watch` for watch mode.
-- Single test: `pnpm test path/to/file.test.ts` or add `-t "<test name>"`.
+## Repo layout
 
-## Layout
+- Root is the pnpm workspace. Package manager is **pnpm 11.5.2** and Node is
+  **24**, both pinned via `mise.toml`. Workspace globs live in
+  `pnpm-workspace.yaml` (`packages/*`).
+- `packages/www/` — the site: **SvelteKit 2 + Svelte 5 (runes) + Tailwind
+  4**, deployed to Vercel via `@sveltejs/adapter-vercel`. All pages are
+  prerendered; the only server code is remote functions for the two forms. This
+  is where all commands below run.
+- **All dependency versions in `packages/www/package.json` are pinned exactly**
+  (no `^`/`~`). Remote functions are experimental; treat `@sveltejs/kit` and
+  `svelte` upgrades as deliberate, tested events, never routine bumps.
 
-- `src/App.tsx` — exports `routes: RouteRecord[]` (vite-react-ssg typed API).
-  Add new pages to both `src/pages/` and the `routes` array as a child of the
-  root `RootLayout` record.
-- `src/main.tsx` — exports `createRoot = ViteReactSSG({ routes })`; no manual
-  `ReactDOM.createRoot` or `<BrowserRouter>` — the SSG runner owns those.
-- `src/components/RootLayout.tsx` — top-level layout rendered for every route.
-  Mounts all providers (`QueryClientProvider > TooltipProvider > LocationProvider
-  > Toaster/Sonner > ScrollToTop`) then `<Outlet />`. The `entry`field in`App.tsx` points here so the SSG runner can locate it.
-- `src/components/Seo.tsx` — renders `<Head>` tags (vite-react-ssg). Pages use
-  `<Seo route="/path" />` to inject per-page title/description/OG tags; values
-  are resolved from `src/cms/seo.json` with a global `default` fallback.
-- `src/context/location-context.ts` — exports the `Location` type, the
-  `locations` array (loaded eagerly from `src/cms/locations/*.json` via
-  `import.meta.glob` and sorted by `order` then `id`), `LOCATION_STORAGE_KEY`,
-  `nearestLocation()` (haversine nearest-neighbour), `LocationContext`, and the
-  `useLocationContext()` hook. Phone numbers, addresses, and coordinates are
-  CMS-managed — edit them under Locations in `/admin`, not in this file. A
-  `FALLBACK_LOCATION` is used if zero JSON entries exist. Consumers import from
-  this file.
-- `src/context/LocationContext.tsx` — exports only `LocationProvider`. Imports
-  `LocationContext` and `locations` from `./location-context`. `RootLayout.tsx`
-  imports `LocationProvider` from here. The split keeps Vite fast-refresh happy
-  (`react-refresh/only-export-components` requires `.tsx` files to export only
-  components).
-- `src/components/ui/*` — shadcn/ui primitives; add via shadcn CLI.
-  `components.json` aliases: `@/components`, `@/components/ui`, `@/lib/utils`,
-  `@/hooks`. Base color `slate`, style `default`.
-- `src/data/services.ts` — shared service content referenced by pages.
-- `admin/` — Sveltia CMS admin entry; processed by Vite as a separate build
-  input (not part of SSG routing). Outputs to `dist/admin/` at build time.
+## Commands
+
+Run from `packages/www` (or `pnpm --filter www <script>` from the root). Prefix
+with `mise exec --` if node/pnpm are not already on PATH.
+
+- `pnpm dev` — Vite dev server. Remote functions run in dev, so `/contact` and
+  `/careers` submissions work locally (email only sends when `RESEND_API_KEY`
+  is set).
+- `pnpm build` — SvelteKit production build; prerenders every route (21 pages:
+  8 static + 12 service `[slug]` pages + `/admin` shell) and emits the Vercel
+  adapter output. Fails on broken prerender links — keep nav/footer targets real.
+- `pnpm preview` — serve the built output locally.
+- `pnpm check` — `svelte-kit sync` + `svelte-check`. Must stay at 0 errors / 0
+  warnings.
+- `pnpm format` — Prettier (tabs, no semis, double quotes, `printWidth: 100`).
+  Run before committing.
+- `pnpm lint` — ESLint flat config.
+
+## Environment variables
+
+Declared explicitly in `src/env.ts` via `defineEnvVars` (the
+`experimental.explicitEnvironmentVariables` flag is on). Local values live in
+`packages/www/.env` (git-ignored); production values are set in the Vercel
+project settings.
+
+- `PUBLIC_POSTHOG_PROJECT_TOKEN`, `PUBLIC_POSTHOG_HOST` — public, imported from
+  `$app/env/public`; used by `src/lib/posthog.ts` (client) and
+  `src/lib/server/posthog.ts` (server capture). Both are **required** — their
+  `src/env.ts` schemas reject empty values, so `pnpm dev`/`build`/`preview` fail
+  fast when either is unset (set them in `.env` locally and in Vercel).
+- `RESEND_API_KEY` — private, imported from `$app/env/private`; used by
+  `src/lib/server/email.ts` to call the Resend REST API. Scope it to sending
+  access on the account that owns the verified `send.hukills.com` domain.
+
+Because `experimental.explicitEnvironmentVariables` is on (`vite.config.ts`),
+always import env vars from `$app/env/public` / `$app/env/private` — never the
+legacy `$env/static/*` or `$env/dynamic/*` modules. New vars must be declared in
+`src/env.ts` (via `defineEnvVars`) first, or the import won't exist. `$app/env`
+also replaces `$app/environment` as the source for `dev` / `browser` /
+`building` / `version` — import those from `$app/env` for consistency, as the
+existing code does.
+
+## Layout (`packages/www/src`)
+
+- `routes/+layout.svelte` — global root: imports `layout.css`, sets the location
+  context, inits PostHog, captures pageviews in `afterNavigate`. No visual
+  chrome, so `/admin` can render clean.
+- `routes/+layout.ts` — `export const prerender = true` (applies site-wide).
+- `routes/(site)/` — a route group (no URL segment) whose `+layout.svelte` mounts
+  the marketing chrome (`TooltipProvider > Toaster > Header / main / Footer`).
+  Every public page and `+error.svelte` (the 404) live here.
+- `routes/[slug]/` is inside `(site)`: `+page.ts` resolves the slug from
+  `servicePagesBySlug`, `error(404)` on miss, and exports an `entries` generator
+  so all service pages prerender.
+- `routes/admin/` — Sveltia CMS. `+page.ts` sets `ssr = false` + `prerender =
+  true`; `+page.svelte` dynamically imports `@sveltia/cms` and calls
+  `init({ config })` on mount. It sits outside `(site)`, so it gets no header/
+  footer.
+- `lib/components/` — `Header`, `Footer`, `LocationSelector`, `Seo`, `Icon`, the
+  service layout components, and `ui/` (shadcn-svelte primitives: button, input,
+  textarea, label, checkbox, toggle, skeleton, separator, sheet, dialog, tooltip,
+  sonner). Add more via `pnpm dlx shadcn-svelte@latest add <name>`.
+- `lib/components/Seo.svelte` — renders `<svelte:head>` tags; pages pass
+  `<Seo route="/path" seoBlock={...} />` resolving against `src/lib/cms/seo.json`
+  with a `default` fallback. Exports the `PageSeoData` type.
+- `lib/location/location.svelte.ts` — `Location` type, `locations` (eager glob of
+  `$lib/cms/locations/*.json`), `LocationState` runes class (localStorage key
+  `hukills.selectedLocation`, haversine `nearestLocation`, geolocation
+  auto-detect), and `set/getLocationContext()`. Phone numbers, addresses, and
+  coordinates are CMS-managed — edit under Locations in `/admin`.
+- `lib/attachments/reveal.ts` — IntersectionObserver scroll-reveal attachment
+  (`{@attach reveal({ delay, y })}`), the replacement for framer-motion
+  `whileInView`. Animations otherwise use Svelte `transition:`/`in:`/`out:`.
+- `lib/icons.ts` — `@lucide/svelte` registry (`iconMap`, `getIcon`, `IconName`);
+  single source of truth for CMS-selectable icons.
+- `lib/services/` — `service-pages.ts` (glob of `$lib/cms/service-pages/*.json`,
+  `servicePagesBySlug`, `servicePageSlugs`, layout types) and `services.ts`
+  (`featuredServices`, `allServices` tile lists for the grids).
 
 ## Content (Sveltia CMS)
 
-- Admin UI: `/admin` served from `admin/index.html` (Vite entry). The CMS is
-  installed as an npm package (`@sveltia/cms`) and manually initialised in
-  `admin/main.ts` via `init({ config })`.
-- Config: `admin/config.ts` — exported `CmsConfig` object (`satisfies CmsConfig`
-  from `@sveltia/cms`). Sets `load_config_file: false` so no separate JSON file
-  is loaded at runtime. Contains GitHub backend (`repo`, `base_url` for auth
-  worker), singletons, collections, and media transformation settings.
-- Version pin: `@sveltia/cms` in `package.json` (`dependencies`) is the single
-  source of truth. Bump it there only when upgrading.
-- CMS-managed content lives under `src/cms/` (currently just `seo.json`);
-  import these files using `@/cms/<name>.json` — not relative paths.
-- `src/cms/seo.json` shape: a `default` block (siteName, title, description,
-  `canonicalBase`, `ogImage`, ogImageAlt/Width/Height) and a `routes` array of
-  objects keyed by `path`. `Seo.tsx` resolves per-route values with fallback to
-  defaults. OG image ships from `public/media/og.webp`.
-- Media: stored under `public/media/`, referenced in content as `/media/...`
-  (the `public_folder` prefix), not as `@/` aliases.
-- To add a managed content file: add a singleton or collection entry to
-  `admin/config.ts`, then import the resulting JSON from `src/cms/<name>.json`.
+- Admin UI at `/admin`, mounted client-side from the `@sveltia/cms` npm package
+  (pinned in `package.json`).
+- Config lives in `src/lib/admin/` — `config.ts` plus `config/collections/*` and
+  `config/singletons/*` modules. GitHub backend (`repo: tomatrow/hukills-www`,
+  auth via `base_url: https://sveltia-cms-auth.tomatrow.workers.dev` — a small
+  Cloudflare Worker on `workers.dev`).
+- Collection/singleton `folder`/`file` paths point at
+  `packages/www/src/lib/cms/...`; `media_folder` is `packages/www/static/media`
+  with `public_folder: /media`. Media transforms: webp q85, 2048px max.
+- CMS-managed JSON lives under `src/lib/cms/`; import via `$lib/cms/<name>.json`.
+- Sveltia commits to the repo's default branch (`main`); Vercel auto-deploys from
+  `main`. A CMS save therefore publishes automatically — no manual deploy step.
+
+## Forms & email (remote functions)
+
+- Form validation schemas are shared client/server in `src/lib/schemas/`
+  (`contact.ts`, `career.ts`); they are Standard Schema (zod) objects passed to
+  both the remote `form()` and the client `preflight()`.
+- `src/routes/(site)/contact/contact.remote.ts` (`submitContact`) and
+  `src/routes/(site)/careers/career.remote.ts` (`submitApplication`) are SvelteKit
+  remote form functions. Pages spread `{...submitContact}`, render fields via
+  `fields.X.as(...)`, show `issues()`, and use `enhance()` for toasts.
+- `src/lib/server/email.ts` (`safeSend`) sends via the **Resend REST API**
+  (base64 attachments, optional `reply_to`). Both remote functions send from
+  `Hukill's Inc. <hello@send.hukills.com>` and set `replyTo` so staff
+  notifications reply straight to the lead and auto-replies route back to the
+  lead mailbox. `html.ts` escapes user input; `server/posthog.ts` does
+  server-side capture and recovers distinct/session ids from the `ph_*` cookie
+  via `getRequestEvent()`.
+- **Dev vs. prod addresses:** both remote   functions gate on `dev` from
+  `$app/env`. In dev, the from address and lead recipients are hardcoded
+  to the verified `@mail.ajcaldwell.dev` account (`hello@mail.ajcaldwell.dev`,
+  `contact_leads_address@…`, `career_leads_address@…`) so local submissions send
+  through the dev Resend key without emailing real staff. The CMS values in
+  `email-settings.json` (`fromAddress` = `hello@send.hukills.com`, `leadEmail`,
+  `careerLeadEmail`) are production-only. Note `pnpm preview` has `dev = false`,
+  so previewing locally uses the prod from address and won't send with a dev key.
+- **Vercel serverless bodies are capped at 4.5 MB**, so resume uploads are capped
+  at **4 MB** in `src/lib/schemas/career.ts` (`MAX_RESUME_BYTES`), enforced on
+  both client and server.
 
 ## Conventions & gotchas
 
-- Import alias `@/*` → `src/*` (vite, vitest, tsconfig, components.json all
-  agree — use `@/` everywhere, never relative paths across directories).
-- TS is **loose**: `strict`, `strictNullChecks`, `noImplicitAny`,
-  `noUnusedLocals/Params` all disabled. Don't rely on strict-mode diagnostics.
-- ESLint has `@typescript-eslint/no-unused-vars` **off**. The
-  `react-refresh/only-export-components` rule is active as a warning — if it
-  fires on a `.tsx` file, fix it by moving non-component exports (types,
-  constants, hooks) into a sibling `.ts` file and updating consumer imports.
-  See `src/context/` for the established pattern.
-- Fonts: `font-display` = Oswald, `font-body` = Inter (Tailwind theme extends).
-- Provider order in `RootLayout.tsx`: `QueryClientProvider > TooltipProvider >
-LocationProvider > Toaster/Sonner > ScrollToTop > Outlet`. No `<BrowserRouter>`
-  in app code — the SSG runner (vite-react-ssg) owns the router.
-- Prettier config (`.prettierrc`): tabs, no semis, double quotes off,
-  `printWidth: 100`, `experimentalTernaries: true`. Run `pnpm format` before
-  committing; `.prettierignore` excludes `node_modules/`, `pnpm-lock.yaml`,
-  `dist/`.
-- Tailwind plugins: `tailwindcss-animate` only (`prettier-plugin-tailwindcss`
-  was removed — don't add it back without installing the package first).
+- Import alias `$lib/*` → `packages/www/src/lib/*`. Use `$lib` everywhere, never
+  relative paths across directories.
+- Svelte 5 runes are forced on (`vite.config.ts`). Runes only: `$state`,
+  `$derived`, `$props`, `$effect`; snippets + `{@render}` (no slots); `onclick`
+  (no `on:` directives). Attachments via `{@attach}` (no `use:` where an
+  attachment fits).
+- **Markup locals use declaration tags, never legacy `{@const}`.** Svelte 5.56+
+  supports `{const x = …}` / `{let x = …}` anywhere in markup. Prefer them over
+  `{@const}`. A plain `{const x = …}` evaluates **once** at block creation — if
+  the expression depends on reactive state (`$state`, `$derived`, `page`, a
+  `SvelteSet`, a form field `.value()`, etc.), wrap it as
+  `{const x = $derived(…)}` so it stays reactive (this is the true equivalent of
+  the old reactive `{@const}`). Plain `{const}` is correct only for static data
+  (e.g. `getIcon(item.icon)` over CMS JSON in an `{#each}`).
+- Fonts: `font-display` = Oswald, `font-body` = Inter, loaded via a Google Fonts
+  `@import` at the top of `layout.css`; exposed through Tailwind 4 `@theme`.
+  Design tokens are HSL CSS variables in `layout.css` with a `container` utility
+  and `tw-animate-css` for the shadcn animations.
+- Prettier: tabs, no semis, double quotes, `printWidth: 100`. Run `pnpm format`
+  before committing.
+- When editing Svelte, use the Svelte MCP tools (`svelte-autofixer`, docs) and
+  the `svelte-file-editor` agent.
+- **CMS empty strings — use `||`, not `??`, for CMS-field fallbacks.** Sveltia
+  writes `""` (not `null`/absent) for blank _optional string_ fields, so `??`
+  does NOT trigger the fallback — an empty field silently renders `""` (e.g. a
+  self-linking `href=""`, an empty `alt`/`aria-label`, or a page title that
+  drops through to the global SEO default). Guard any CMS string that needs a
+  fallback with `value || fallback`, or normalize via `emptyToUndefined()` (see
+  `Seo.svelte`) before chaining `??`. Blank _number_ fields emit `null`, so
+  `?? undefined` is correct for those (see `PageSeoData.ogImageWidth`).
 
-## Testing
+## Deploy (Vercel)
 
-- Vitest + Testing Library + jsdom; globals enabled (`vitest/globals` in
-  `tsconfig.app.json` types). Setup: `src/test/setup.ts` (mocks `matchMedia`).
-- Test glob: `src/**/*.{test,spec}.{ts,tsx}`.
-
-## Worker / API routes
-
-Entry: `worker/index.ts` — `export default { fetch }` handler. Routes dispatch
-on `URL(request.url).pathname`; every other path delegates to `env.ASSETS.fetch(request)`
-so the static asset router keeps handling SPA pages and the 404 page.
-
-**Current routes:**
-
-| Method | Path           | Handler                    |
-| ------ | -------------- | -------------------------- |
-| POST   | `/api/contact` | `worker/routes/contact.ts` |
-| POST   | `/api/career`  | `worker/routes/career.ts`  |
-
-**Adding a new route:**
-
-1. Create `worker/routes/<name>.ts` — export `async function handle<Name>(request: Request): Promise<Response>`.
-2. Add a `case "/api/<name>":` block in `worker/index.ts`.
-3. Run `pnpm check` to verify types.
-
-**Shared schemas:** Form validation schemas live in `src/lib/schemas/` and are
-imported by both the React pages and the Worker. Add new schemas there; never
-duplicate schema logic between client and server.
-
-**Submission destination:** Each handler currently stubs with `console.log` +
-`200 OK`. The `// TODO: wire submission destination` comment marks the swap
-point. Wire to Resend, MailChannels, or a webhook in a follow-up PR.
-
-**Binding types:** `worker-configuration.d.ts` at the repo root is generated by
-`pnpm worker:types`. Commit it after any `wrangler.jsonc` binding change.
-
-**Gotcha — naming collision:** Cloudflare's asset router wins when a real file
-exists in `dist/`. Avoid creating a page named `api` under `src/pages/` — it
-would shadow the Worker's `/api` namespace.
-
-**Local dev:**
-
-```sh
-pnpm build          # must run first; produces dist/
-pnpm worker:dev     # wrangler dev serves dist/ + Worker on localhost
-```
-
-`pnpm dev` (Vite) still works for pure SPA work — `/api/*` calls will 404 there.
-
-**Live SSG rebuild (`pnpm build:watch`):**
-
-Run in a second terminal alongside `pnpm worker:dev` to auto-rebuild `dist/` on
-source changes:
-
-```sh
-pnpm worker:dev     # terminal 1 — wrangler dev serves dist/ + Worker
-pnpm build:watch    # terminal 2 — chokidar runs an initial build, then re-runs
-                    #              `pnpm build:dev` on save (500 ms debounce)
-```
-
-Watcher scope: `src/**`, `admin/**`, `public/**`, `index.html`. Edits to
-`worker/`, root configs (`vite.config.ts`, `tailwind.config.ts`, `tsconfig*.json`,
-`wrangler.jsonc`), or doc/lockfile churn do **not** trigger an SSG rebuild —
-restart `build:watch` if you change one of those.
-
-- Each rebuild prerenders every route → expect ~5–10 s feedback latency per save
-  (vs sub-second HMR with `pnpm dev`).
-- `wrangler dev --live-reload` reloads the browser when `dist/*.html` is rewritten,
-  so the two terminals coordinate via the filesystem — no orchestrator needed.
-- Use this mode to validate prerendered HTML, the `404-page` handler, or
-  `auto-trailing-slash` resolution. For day-to-day SPA work, prefer `pnpm dev`.
-- `worker/**` is intentionally excluded — wrangler hot-reloads the Worker itself;
-  rebuilding the SPA on Worker edits would be wasted work.
-
-## Deploy (Cloudflare Workers Static Assets)
-
-Config: `wrangler.jsonc` at repo root. Worker name: `hukills`. The `main` field
-points to `worker/index.ts`; the Worker handles `/api/*` routes and delegates
-everything else to the asset binding.
-
-- `not_found_handling: "404-page"` — unknown paths get `dist/404.html` with a
-  404 status. This file is created by `scripts/copy-404.mjs` at build time (see
-  Commands above). **Do not delete that script.**
-- `html_handling: "auto-trailing-slash"` — resolves folder-index files
-  (`dist/about/index.html` → `/about/`) automatically.
-
-### First-time setup
-
-```sh
-pnpm dlx wrangler login   # opens browser OAuth; stores token in ~/.wrangler/
-```
-
-### Deploy
-
-```sh
-pnpm build && pnpm deploy
-# dry-run (no upload) to validate config:
-pnpm deploy:dryrun
-```
-
-First deploy URL: `https://hukills.<your-subdomain>.workers.dev`
-
-### Custom domains
-
-Managed in the Cloudflare dashboard (not in `wrangler.jsonc`):
-Workers & Pages → hukills → Settings → Domains → Add Custom Domain.
-Add both `hukills.com` and `www.hukills.com`; CF provisions TLS automatically
-if the zone is in your account. Apex → www redirect can be handled with a
-Cloudflare Redirect Rule.
+- Vercel project root directory is `packages/www`; the SvelteKit build +
+  `adapter-vercel` produce the deployment. Node 24, pnpm 11.5.2.
+- Set the three env vars above in Vercel project settings (production +
+  preview). Add `RESEND_API_KEY` from the Resend account that owns the verified
+  `send.hukills.com` domain.
+- Custom domains (`hukills.com`, `www.hukills.com`) are attached in the Vercel
+  dashboard via DNS records — no nameserver move required (which is why the app
+  is on Vercel rather than Cloudflare Workers).
+- `static/robots.txt` ships as-is; `+error.svelte` provides the 404.
 
 ## Misc
 
-- Vitest is the sole test runner; no Playwright setup exists.
-- `dist/` is a stale build artifact (git-ignored); safe to delete and rebuild.
-- `.nova/Configuration.json` pins the OpenCode devx port to `13261`.
-- `pnpm format` uses `@prettier/plugin-oxc` (listed in devDependencies) but no other Prettier plugins are active.
+- Vitest is not yet configured; verification is manual. Add it if automated
+  tests are wanted.
+- `packages/www/.svelte-kit/` and Vercel output are build artifacts (git-ignored).

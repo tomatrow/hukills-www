@@ -1,6 +1,0 @@
-/node_modules
-/pnpm-lock.yaml
-/dist
-/.agents
-/worker-configuration.d.ts
-/skills-lock.json
