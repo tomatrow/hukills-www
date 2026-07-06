@@ -1,0 +1,20 @@
+{
+	"redirects": [
+		{ "source": "/home", "destination": "/", "permanent": true },
+		{ "source": "/quote", "destination": "/contact", "permanent": true },
+		{ "source": "/call-us", "destination": "/contact", "permanent": true },
+		{ "source": "/thank-you", "destination": "/", "permanent": true },
+		{ "source": "/medford", "destination": "/contact", "permanent": true },
+		{ "source": "/fort-worth", "destination": "/contact", "permanent": true },
+		{ "source": "/home-service-area", "destination": "/contact", "permanent": true },
+		{ "source": "/restoration-1", "destination": "/projects", "permanent": true },
+		{ "source": "/hukills-plumbing", "destination": "/plumbing", "permanent": true },
+		{ "source": "/cart", "destination": "/", "permanent": true },
+		{
+			"source": "/blog/blog-post-title-four-c45p9-dpf3k",
+			"destination": "/water-heaters",
+			"permanent": true
+		},
+		{ "source": "/blog/:path*", "destination": "/", "permanent": true }
+	]
+}
