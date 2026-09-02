@@ -5,7 +5,7 @@
 		"titleAccent": "Owned",
 		"titleSuffix": "Since 1979",
 		"description": "We're a team of craftsmen, problem-solvers, and people of faith - committed to doing honest work that lasts.",
-		"image": "/media/home/hero.webp",
+		"image": "/media/IMG_3774.webp",
 		"imageAlt": "The Hukill's crew on a job site at golden hour"
 	},
 	"mission": {
@@ -30,7 +30,7 @@
 		"eyebrow": "Our Values",
 		"heading": "What We Stand",
 		"headingAccent": "For",
-		"backgroundImage": "/media/about/values.webp",
+		"backgroundImage": "/media/IMG_4577.webp",
 		"items": [
 			{
 				"icon": "Award",
