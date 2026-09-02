@@ -2,7 +2,7 @@
 	"tile": {
 		"icon": "HardHat",
 		"description": "Ground-up plumbing systems for residential and commercial construction.",
-		"image": "/media/service-pages/new-build-plumbing/2e70c932-fed3-4c15-bac7-571717229aa0.webp",
+		"image": "/media/service-pages/new-build-plumbing/IMG_4579.webp",
 		"imageAlt": "New build plumbing services",
 		"path": "",
 		"featured": false,
@@ -57,6 +57,10 @@
 	"seo": {
 		"title": "New Build Plumbing | Hukill's Inc.",
 		"description": "Licensed plumbing contractors for new construction. System design, piping, fixtures, water supply, drainage, and gas lines for residential and commercial builds.",
-		"ogImage": "https://images.squarespace-cdn.com/content/v1/671a62937af7e4192d2e3eec/1729782431360-3F7L70UFZPZ50H7RW04P/Untitled+design+%288%29.png"
+		"canonical": "",
+		"ogImage": "https://images.squarespace-cdn.com/content/v1/671a62937af7e4192d2e3eec/1729782431360-3F7L70UFZPZ50H7RW04P/Untitled+design+%288%29.png",
+		"ogImageAlt": "",
+		"ogImageWidth": null,
+		"ogImageHeight": null
 	}
 }
