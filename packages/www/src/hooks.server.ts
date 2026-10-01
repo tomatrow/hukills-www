@@ -31,10 +31,13 @@ export const handle: Handle = ({ event, resolve }) => {
 	return resolve(event, {
 		transformPageChunk: ({ html }) =>
 			// Function replacer so `$` sequences in snippets are inserted literally.
+			// Every slot keeps a marker comment: SvelteKit's dev check warns ("Removing
+			// comments in transformPageChunk can break Svelte's hydration") whenever the
+			// comment count drops, even though these slots sit outside hydrated markup.
 			html.replace(PLACEHOLDER, (_, slot: Slot) =>
 				suppressedReason ?
 					`<!-- custom code (${slot}) suppressed: ${suppressedReason} -->`
-				:	customCode[slotFields[slot]] || ""
+				:	`<!-- custom code (${slot}) -->${customCode[slotFields[slot]] || ""}`
 			)
 	})
 }
