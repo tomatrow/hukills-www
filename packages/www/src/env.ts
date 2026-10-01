@@ -20,5 +20,11 @@ export const variables = defineEnvVars({
 	RESEND_API_KEY: {
 		static: true,
 		description: "Resend API key for the transactional email REST API"
+	},
+	VERCEL_ENV: {
+		static: true,
+		schema: v.optional(v.string()),
+		description:
+			"Vercel system env var (production | preview | development); unset locally. CMS custom code only renders when it is 'production'."
 	}
 })

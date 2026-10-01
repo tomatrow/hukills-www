@@ -52,6 +52,10 @@ project settings.
 - `RESEND_API_KEY` — private, imported from `$app/env/private`; used by
   `src/lib/server/email.ts` to call the Resend REST API. Scope it to sending
   access on the account that owns the verified `send.hukills.com` domain.
+- `VERCEL_ENV` — Vercel system var (static, optional; unset locally), imported
+  from `$app/env/private` by `src/hooks.server.ts`. CMS custom code only renders
+  when it is `production`. Requires Vercel's "Automatically expose System
+  Environment Variables" (on by default); never set it manually.
 
 Because `experimental.explicitEnvironmentVariables` is on (`vite.config.ts`),
 always import env vars from `$app/env/public` / `$app/env/private` — never the
@@ -110,6 +114,16 @@ existing code does.
   `packages/www/src/lib/cms/...`; `media_folder` is `packages/www/static/media`
   with `public_folder: /media`. Media transforms: webp q85, 2048px max.
 - CMS-managed JSON lives under `src/lib/cms/`; import via `$lib/cms/<name>.json`.
+- **Tracking & Custom Code** singleton (`custom-code.json`: `head`, `bodyStart`,
+  `bodyEnd` raw-HTML code fields) is for editor-managed tags (GTM, GA4, pixels).
+  `src/app.html` has `<!--custom-code:head|body-start|body-end-->` placeholders
+  (end of `<head>`, right after `<body>`, just before `</body>`), filled by
+  `transformPageChunk` in `src/hooks.server.ts` — baked into prerendered pages
+  at build, and applied at runtime to the 404. Snippets render only when
+  `VERCEL_ENV === "production"` (and not in `dev`), never on `/admin`; otherwise
+  each slot becomes a `<!-- custom code (…) suppressed: … -->` comment. Snippets
+  are trusted and unvalidated (editors already have repo write access). PostHog
+  stays in code, not here.
 - Sveltia commits to the repo's default branch (`main`); Vercel auto-deploys from
   `main`. A CMS save therefore publishes automatically — no manual deploy step.
 
@@ -178,8 +192,8 @@ existing code does.
 
 - Vercel project root directory is `packages/www`; the SvelteKit build +
   `adapter-vercel` produce the deployment. Node 24, pnpm 11.5.2.
-- Set the three env vars above in Vercel project settings (production +
-  preview). Add `RESEND_API_KEY` from the Resend account that owns the verified
+- Set the three env vars above (not `VERCEL_ENV`, which Vercel provides) in
+  Vercel project settings (production + preview). Add `RESEND_API_KEY` from the Resend account that owns the verified
   `send.hukills.com` domain.
 - Custom domains (`hukills.com`, `www.hukills.com`) are attached in the Vercel
   dashboard via DNS records — no nameserver move required (which is why the app

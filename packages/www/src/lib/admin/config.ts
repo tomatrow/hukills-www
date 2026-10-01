@@ -3,6 +3,7 @@ import { locationsCollection } from "./config/collections/locations"
 import { pagesCollection } from "./config/collections/pages"
 import { projectsCollection } from "./config/collections/projects"
 import { servicesCollection } from "./config/collections/services"
+import { customCodeSingleton } from "./config/singletons/custom-code"
 import { emailSettingsSingleton } from "./config/singletons/email-settings"
 import { footerSingleton } from "./config/singletons/footer"
 import { headerSingleton } from "./config/singletons/header"
@@ -48,6 +49,7 @@ export const config = {
 		{ divider: true },
 		serviceCtaSingleton,
 		emailSettingsSingleton,
-		seoSingleton
+		seoSingleton,
+		customCodeSingleton
 	]
 } satisfies CmsConfig
