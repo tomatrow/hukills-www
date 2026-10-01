@@ -10,31 +10,31 @@
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/cloudflare/SKILL.md",
-      "computedHash": "ecc9c0211c605451f7e8b437724f84810fe013d5ca6c653c51d046139d4ecbf7"
+      "computedHash": "cdde2a9a6093e73cc740f5188dc7a0900f96095a5dbf7305f17789ddd30924a0"
     },
     "cloudflare-email-service": {
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/cloudflare-email-service/SKILL.md",
-      "computedHash": "6274be056fe5211aa220833c97ff6a7d96a1cdfd8854a53ca839ca758d35f356"
+      "computedHash": "d2905141e0883fd3dfd4318e582de04f5a49d6e1b8971b2c7dcf708baf79cb0e"
     },
     "grill-me": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grill-me/SKILL.md",
-      "computedHash": "f321507f77702a54af1db66549ec1685fc625390d06c57d7949cdcda8eb1b5c7"
+      "computedHash": "9cdbb4b8f7a3aeaef82e6230c9e823500d4a8a1214c726cf342cf9829d34fc7d"
     },
     "grilling": {
       "source": "mattpocock/skills",
       "sourceType": "github",
       "skillPath": "skills/productivity/grilling/SKILL.md",
-      "computedHash": "ef685a6fa0bbe73b05bbd8dc1ec97258191587f07c6aa7dbc9006675ceb8f90f"
+      "computedHash": "4dd886b0196bf43729d954ae326016f2bd9f5f79d892500b407c33a753362f14"
     },
     "resend": {
       "source": "resend/resend-skills",
       "sourceType": "github",
       "skillPath": "skills/resend/SKILL.md",
-      "computedHash": "b246db7265df47250a7a55efb02778c2870d18e8030164a23e26a6324e4f4f8b"
+      "computedHash": "7a51e5808711f4c099b1170939ea216520ae18d7a1fa60cb9349c6c345799cb3"
     },
     "skill-creator": {
       "source": "anthropics/skills",
@@ -45,19 +45,19 @@
       "source": "open-circle/agent-skills",
       "sourceType": "github",
       "skillPath": "skills/valibot/SKILL.md",
-      "computedHash": "6798b923c1bbe9b07cb8c40470ada09c377d666045caefda90d95577e16e8744"
+      "computedHash": "dc7ad7dc09548808d26aef0bc58786a4ee3559e153a1e83c9c4574f3a294ea1b"
     },
     "workers-best-practices": {
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/workers-best-practices/SKILL.md",
-      "computedHash": "420e1ad3eaeb8ed2016e6b34fff3757de6aa39899ec2bd6e9784a29c38e70f9a"
+      "computedHash": "61834fa098e16280aae54e584f5a16e047391790b1e1e4995c0e9a111d6d75c3"
     },
     "wrangler": {
       "source": "cloudflare/skills",
       "sourceType": "github",
       "skillPath": "skills/wrangler/SKILL.md",
-      "computedHash": "11edeb37eedb91deedde694b2bb1cc4ff4e8b5a8f1836c217a8c871fe39abcb5"
+      "computedHash": "b92fcf07ba4b7acfa9d14c4e6e22c374174deaf5fe49674cc763c163339ab809"
     }
   }
 }
